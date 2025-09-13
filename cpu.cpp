@@ -1,56 +1,59 @@
 #include "cpu.hpp"
 #include <iostream>
-#include "opcode.hpp"
+
+CPU::Instruction CPU::table[256];
+
+void CPU::initTable() noexcept {
+    for (auto & i : table) {
+        i = { "???", nullptr, nullptr, nullptr, 1, 2 };
+    }
+
+    table[0xA9] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchImmediate, 2, 2 };
+    table[0xA5] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchZeroPage, 2, 3 };
+    table[0xB5] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchZeroPageX, 2, 4 };
+    table[0xAD] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchAbsolute, 3, 4 };
+    table[0xBD] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchAbsoluteX, 3, 4 };
+    table[0xB9] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchAbsoluteY, 3, 4 };
+    table[0xA1] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchIndirectX, 2, 6 };
+    table[0xB1] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchIndirectY, 2, 5 };
+
+    table[0x29] = { "AND", &CPU::AND, nullptr, &CPU::fetchImmediate, 2, 2 };
+    table[0x25] = { "AND", &CPU::AND, nullptr, &CPU::fetchZeroPage, 2, 3 };
+    table[0x35] = { "AND", &CPU::AND, nullptr, &CPU::fetchZeroPageX, 2, 4 };
+    table[0x2D] = { "AND", &CPU::AND, nullptr, &CPU::fetchAbsolute, 3, 4 };
+    table[0x3D] = { "AND", &CPU::AND, nullptr, &CPU::fetchAbsoluteX, 3, 4 };
+    table[0x39] = { "AND", &CPU::AND, nullptr, &CPU::fetchAbsoluteY, 3, 4 };
+    table[0x21] = { "AND", &CPU::AND, nullptr, &CPU::fetchIndirectX, 2, 6 };
+    table[0x31] = { "AND", &CPU::AND, nullptr, &CPU::fetchIndirectY, 2, 5 };
+}
 
 void CPU::step() {
-    const uint8_t raw = memory.read(PC++);
+    const uint8_t opcode = memory.read(PC++);
 
-    switch (const auto op = static_cast<Opcode>(raw)) {
-        case Opcode::LDA_Immediate:
-            LDA(fetchImmediate());
-            break;
-        case Opcode::LDA_ZeroPage:
-            LDA(fetchZeroPage());
-            break;
-        case Opcode::LDA_ZeroPageX:
-            LDA(fetchZeroPageX());
-            break;
-        case Opcode::LDA_Absolute:
-            LDA(fetchAbsolute());
-            break;
-        case Opcode::LDA_AbsoluteX: {
-            bool pageCrossed = false;
-            LDA(fetchAbsoluteX(pageCrossed));
-            break;
-        }
-        case Opcode::LDA_AbsoluteY: {
-            bool pageCrossed = false;
-            LDA(fetchAbsoluteY(pageCrossed));
-            break;
-        }
-        case Opcode::LDA_IndirectX:
-            LDA(fetchIndirectX());
-            break;
-        case Opcode::LDA_IndirectY: {
-            bool pageCrossed = false;
-            LDA(fetchIndirectY(pageCrossed));
-            break;
-        }
-        default:
-            std::cerr << "Unknown opcode: " << static_cast<int>(op) << "\n";
-            break;
+    if (const Instruction& instr = table[opcode]; instr.fetch && instr.operate) {
+        const uint8_t value = (this->*instr.fetch)();
+        if (pageCrossed) cycles++;
+        (this->*instr.operate)(value);
+    } else if (instr.operateNoArg) {
+        (this->*instr.operateNoArg)();
+    } else {
+        std::cerr << "Unknown opcode: " << std::hex << static_cast<int>(opcode) << "\n";
     }
 }
 
-// --- Логика инструкции ---
+void CPU::AND(const uint8_t value) noexcept {
+    A = A & value;
+    setZN(A);
+}
+
 void CPU::LDA(const uint8_t value) noexcept {
     A = value;
     setZN(A);
 }
 
 void CPU::setZN(const uint8_t value) noexcept {
-    if (value == 0) status |= 0x02; else status &= ~0x02; // Z flag
-    if (value & 0x80) status |= 0x80; else status &= ~0x80; // N flag
+    if (value == 0) P |= 0x02; else P &= ~0x02; // Z flag
+    if (value & 0x80) P |= 0x80; else P &= ~0x80; // N flag
 }
 
 uint8_t CPU::fetchImmediate() {
@@ -75,7 +78,7 @@ uint8_t CPU::fetchAbsolute() {
     return memory.read(addr);
 }
 
-uint8_t CPU::fetchAbsoluteX(bool& pageCrossed) {
+uint8_t CPU::fetchAbsoluteX() {
     const uint8_t low = memory.read(PC++);
     const uint8_t high = memory.read(PC++);
     const uint16_t base = high << 8 | low;
@@ -84,7 +87,7 @@ uint8_t CPU::fetchAbsoluteX(bool& pageCrossed) {
     return memory.read(addr);
 }
 
-uint8_t CPU::fetchAbsoluteY(bool& pageCrossed) {
+uint8_t CPU::fetchAbsoluteY() {
     const uint8_t low = memory.read(PC++);
     const uint8_t high = memory.read(PC++);
     const uint16_t base = high << 8 | low;
@@ -100,7 +103,7 @@ uint8_t CPU::fetchIndirectX() {
     return memory.read(addr);
 }
 
-uint8_t CPU::fetchIndirectY(bool& pageCrossed) {
+uint8_t CPU::fetchIndirectY() {
     const uint8_t base = memory.read(PC++);
     const uint16_t addrBase = memory.read(base) | memory.read(base + 1) << 8;
     const uint16_t addr = addrBase + Y;

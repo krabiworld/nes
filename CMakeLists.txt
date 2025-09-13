@@ -7,4 +7,4 @@ add_executable(nes main.cpp
         cpu.cpp
         cpu.hpp
         memory.hpp
-        opcode.hpp)
+)
