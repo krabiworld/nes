@@ -8,6 +8,10 @@ void CPU::initTable() noexcept {
         i = { "???", nullptr, nullptr, nullptr, 1, 2 };
     }
 
+    // BRK
+    table[0x0] = {"BRK", nullptr, &CPU::BRK, nullptr, 1, 7};
+
+    // LDA
     table[0xA9] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchImmediate, 2, 2 };
     table[0xA5] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchZeroPage, 2, 3 };
     table[0xB5] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchZeroPageX, 2, 4 };
@@ -17,6 +21,7 @@ void CPU::initTable() noexcept {
     table[0xA1] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchIndirectX, 2, 6 };
     table[0xB1] = { "LDA", &CPU::LDA, nullptr, &CPU::fetchIndirectY, 2, 5 };
 
+    // AND
     table[0x29] = { "AND", &CPU::AND, nullptr, &CPU::fetchImmediate, 2, 2 };
     table[0x25] = { "AND", &CPU::AND, nullptr, &CPU::fetchZeroPage, 2, 3 };
     table[0x35] = { "AND", &CPU::AND, nullptr, &CPU::fetchZeroPageX, 2, 4 };
@@ -31,14 +36,32 @@ void CPU::step() {
     const uint8_t opcode = memory.read(PC++);
 
     if (const Instruction& instr = table[opcode]; instr.fetch && instr.operate) {
+        std::cout << "Opcode: " << static_cast<int>(opcode) << "\n";
         const uint8_t value = (this->*instr.fetch)();
         if (pageCrossed) cycles++;
         (this->*instr.operate)(value);
     } else if (instr.operateNoArg) {
+        std::cout << "Opcode (no arg): " << static_cast<int>(opcode) << "\n";
         (this->*instr.operateNoArg)();
     } else {
         std::cerr << "Unknown opcode: " << std::hex << static_cast<int>(opcode) << "\n";
     }
+}
+
+void CPU::BRK() noexcept {
+    PC++;
+
+    memory.write(0x0100 + SP--, PC >> 8 & 0xFF);
+    memory.write(0x0100 + SP--, PC & 0xFF);
+
+    const uint8_t flags = P | 0x10;
+    memory.write(0x0100 + SP--, flags);
+
+    P |= 0x04;
+
+    const uint8_t low = memory.read(0xFFFE);
+    const uint8_t high = memory.read(0xFFFF);
+    PC = high << 8 | low;
 }
 
 void CPU::AND(const uint8_t value) noexcept {

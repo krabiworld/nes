@@ -17,11 +17,14 @@ public:
     uint8_t Y{};
     uint16_t PC{};
     uint8_t P{};
+    uint8_t SP{0xFD};
     int cycles{};
 
     Memory& memory;
 
-    explicit CPU(Memory& mem) : memory(mem) {}
+    explicit CPU(Memory& mem) : memory(mem) {
+        initTable();
+    }
 
     void step();
 
@@ -30,6 +33,7 @@ private:
 
     bool pageCrossed{};
 
+    void BRK() noexcept;
     void AND(uint8_t value) noexcept;
     void LDA(uint8_t value) noexcept;
 

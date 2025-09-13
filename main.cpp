@@ -2,6 +2,8 @@
 #include <vector>
 #include <iostream>
 
+#include "SDL3/SDL_events.h"
+
 #include "cpu.hpp"
 #include "memory.hpp"
 
@@ -52,15 +54,14 @@ int main(const int argc, char *argv[]) {
 
     std::cout << "Starting CPU at PC: " << std::hex << cpu.PC << "\n";
 
-    for (int i = 0; i < 10; ++i) {
+    bool running = true;
+    while (running) {
+        SDL_Event e;
+        while (SDL_PollEvent(&e)) {
+            if (e.type == SDL_EVENT_QUIT) running = false;
+        }
+
         cpu.step();
-        std::cout << "Step " << i + 1
-                << " | A: " << std::hex << static_cast<int>(cpu.A)
-                << " X: " << static_cast<int>(cpu.X)
-                << " Y: " << static_cast<int>(cpu.Y)
-                << " P: " << static_cast<int>(cpu.P)
-                << " PC: " << cpu.PC
-                << "\n";
     }
 
     return 0;
