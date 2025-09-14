@@ -68,8 +68,10 @@ void CPU::step() {
     if (const Instruction &instr = table[opcode]; instr.fetch && instr.operate) {
         std::println("Opcode: {}", instr.name);
         const uint8_t value = (this->*instr.fetch)();
-        if (pageCrossed) cycles++;
-        pageCrossed = !pageCrossed;
+        if (pageCrossed) {
+            cycles++;
+            pageCrossed = !pageCrossed;
+        }
         (this->*instr.operate)(value);
     } else if (instr.operateNoArg) {
         std::println("Opcode (no arg): {}", instr.name);
