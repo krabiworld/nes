@@ -34,12 +34,19 @@ private:
     bool pageCrossed{};
 
     void BRK() noexcept;
+    void ORA(uint8_t value) noexcept;
     void AND(uint8_t value) noexcept;
+    void STA(uint8_t addr) noexcept;
     void LDA(uint8_t value) noexcept;
+    void LDX(uint8_t value) noexcept;
+    void LDY(uint8_t value) noexcept;
+    void INX() noexcept;
+    void INY() noexcept;
 
     uint8_t fetchImmediate();
     uint8_t fetchZeroPage();
     uint8_t fetchZeroPageX();
+    uint8_t fetchZeroPageY();
     uint8_t fetchAbsolute();
     uint8_t fetchAbsoluteX();
     uint8_t fetchAbsoluteY();
