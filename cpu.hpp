@@ -3,11 +3,36 @@
 
 class CPU {
 public:
+    enum class AddrMode {
+        Implied,
+        Immediate,
+        ZeroPage,
+        ZeroPageX,
+        ZeroPageY,
+        Absolute,
+        AbsoluteX,
+        AbsoluteY,
+        IndirectX,
+        IndirectY
+    };
+
+    enum class OpType {
+        Read,
+        Write,
+        ReadModifyWrite,
+        Implied
+    };
+
+    struct FetchResult {
+        uint16_t addr;
+        uint8_t value;
+    };
+
     struct Instruction {
         const char* name;
-        void (CPU::*operate)(uint8_t);
-        void (CPU::*operateNoArg)();
-        uint8_t (CPU::*fetch)();
+        void (CPU::*operate)(uint16_t addr, uint8_t value);
+        AddrMode mode;
+        OpType type;
         int bytes;
         int cycles;
     };
@@ -33,25 +58,29 @@ private:
 
     bool pageCrossed{};
 
-    void BRK() noexcept;
-    void ORA(uint8_t value) noexcept;
-    void AND(uint8_t value) noexcept;
-    void STA(uint8_t addr) noexcept;
-    void LDA(uint8_t value) noexcept;
-    void LDX(uint8_t value) noexcept;
-    void LDY(uint8_t value) noexcept;
-    void INX() noexcept;
-    void INY() noexcept;
+    void BRK(uint16_t, uint8_t) noexcept;
+    void ORA(uint16_t, uint8_t value) noexcept;
+    void AND(uint16_t, uint8_t value) noexcept;
 
-    uint8_t fetchImmediate();
-    uint8_t fetchZeroPage();
-    uint8_t fetchZeroPageX();
-    uint8_t fetchZeroPageY();
-    uint8_t fetchAbsolute();
-    uint8_t fetchAbsoluteX();
-    uint8_t fetchAbsoluteY();
-    uint8_t fetchIndirectX();
-    uint8_t fetchIndirectY();
+    void STA(uint16_t addr, uint8_t) noexcept;
+    void STX(uint16_t addr, uint8_t) noexcept;
+    void STY(uint16_t addr, uint8_t) noexcept;
+
+    void LDA(uint16_t, uint8_t value) noexcept;
+    void LDX(uint16_t, uint8_t value) noexcept;
+    void LDY(uint16_t, uint8_t value) noexcept;
+
+    void INX(uint16_t, uint8_t) noexcept;
+    void INY(uint16_t, uint8_t) noexcept;
+
+    void TAX(uint16_t, uint8_t) noexcept;
+    void TAY(uint16_t, uint8_t) noexcept;
+    void TSX(uint16_t, uint8_t) noexcept;
+    void TXA(uint16_t, uint8_t) noexcept;
+    void TXS(uint16_t, uint8_t) noexcept;
+    void TYA(uint16_t, uint8_t) noexcept;
+
+    FetchResult fetch(AddrMode mode);
 
     void setZN(uint8_t value) noexcept;
 
