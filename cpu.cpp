@@ -174,6 +174,18 @@ void CPU::TYA(uint16_t, uint8_t) noexcept {
     setZN(A);
 }
 
+void CPU::SEC(uint16_t, uint8_t) noexcept {
+    setFlag(Flag::Carry);
+}
+
+void CPU::SED(uint16_t, uint8_t) noexcept {
+    setFlag(Flag::Decimal);
+}
+
+void CPU::SEI(uint16_t, uint8_t) noexcept {
+    setFlag(Flag::InterruptDisable);
+}
+
 CPU::FetchResult CPU::fetch(const AddrMode mode) {
     FetchResult res{0, 0};
 

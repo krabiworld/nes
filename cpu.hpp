@@ -114,6 +114,16 @@ private:
         set(0x81, "STA", &CPU::STA, AddrMode::IndirectX, OpType::Write, 2, 6);
         set(0x91, "STA", &CPU::STA, AddrMode::IndirectY, OpType::Write, 2, 6);
 
+        // STX
+        set(0x84, "STX", &CPU::STX, AddrMode::ZeroPage, OpType::Write, 2, 3);
+        set(0x96, "STX", &CPU::STX, AddrMode::ZeroPageY, OpType::Write, 2, 4);
+        set(0x8E, "STX", &CPU::STX, AddrMode::Absolute, OpType::Write, 3, 4);
+
+        // STY
+        set(0x84, "STY", &CPU::STY, AddrMode::ZeroPage, OpType::Write, 2, 3);
+        set(0x94, "STY", &CPU::STY, AddrMode::ZeroPageX, OpType::Write, 2, 4);
+        set(0x8C, "STY", &CPU::STY, AddrMode::Absolute, OpType::Write, 3, 4);
+
         // Arithmetic
 
         // DEC
@@ -160,6 +170,11 @@ private:
 
         // Flags
 
+        // SEC / SED / SEI
+        set(0x38, "SEC", &CPU::SEC, AddrMode::Implied, OpType::Implied, 1, 2);
+        set(0xF8, "SED", &CPU::SED, AddrMode::Implied, OpType::Implied, 1, 2);
+        set(0x78, "SEI", &CPU::SEI, AddrMode::Implied, OpType::Implied, 1, 2);
+
         // CLC / CLD / CLI / CLV
         set(0x18, "CLC", &CPU::CLC, AddrMode::Implied, OpType::Implied, 1, 2);
         set(0xD8, "CLD", &CPU::CLD, AddrMode::Implied, OpType::Implied, 1, 2);
@@ -171,12 +186,14 @@ private:
         // BRK
         set(0x00, "BRK", &CPU::BRK, AddrMode::Implied, OpType::Implied, 2, 7);
 
+        // Stack
+        set(0x9A, "TXS", &CPU::TXS, AddrMode::Implied, OpType::Implied, 1, 2);
+        set(0xBA, "TSX", &CPU::TSX, AddrMode::Implied, OpType::Implied, 1, 2);
+
         // Transfer
         set(0xAA, "TAX", &CPU::TAX, AddrMode::Implied, OpType::Implied, 1, 2);
-        set(0xA8, "TAY", &CPU::TAY, AddrMode::Implied, OpType::Implied, 1, 2);
-        set(0xBA, "TSX", &CPU::TSX, AddrMode::Implied, OpType::Implied, 1, 2);
         set(0x8A, "TXA", &CPU::TXA, AddrMode::Implied, OpType::Implied, 1, 2);
-        set(0x9A, "TXS", &CPU::TXS, AddrMode::Implied, OpType::Implied, 1, 2);
+        set(0xA8, "TAY", &CPU::TAY, AddrMode::Implied, OpType::Implied, 1, 2);
         set(0x98, "TYA", &CPU::TYA, AddrMode::Implied, OpType::Implied, 1, 2);
 
         return t;
@@ -235,6 +252,14 @@ private:
     void TXS(uint16_t, uint8_t) noexcept;
 
     void TYA(uint16_t, uint8_t) noexcept;
+
+    void SEC(uint16_t, uint8_t) noexcept;
+
+    void SED(uint16_t, uint8_t) noexcept;
+
+    void SEI(uint16_t, uint8_t) noexcept;
+
+    void XXX(uint16_t, uint8_t) noexcept;
 
     FetchResult fetch(AddrMode mode);
 
