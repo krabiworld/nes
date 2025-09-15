@@ -1,72 +1,7 @@
 #include "cpu.hpp"
 #include <iostream>
 
-CPU::Instruction CPU::table[256];
-
-void CPU::initTable() noexcept {
-    for (auto &i: table) {
-        i = {"???", nullptr, AddrMode::Implied, OpType::Implied, 1, 2};
-    }
-
-    table[0x00] = {"BRK", &CPU::BRK, AddrMode::Implied, OpType::Implied, 2, 7};
-
-    table[0x09] = {"ORA", &CPU::ORA, AddrMode::Immediate, OpType::Read, 2, 2};
-    table[0x05] = {"ORA", &CPU::ORA, AddrMode::ZeroPage, OpType::Read, 2, 3};
-    table[0x15] = {"ORA", &CPU::ORA, AddrMode::ZeroPageX, OpType::Read, 2, 4};
-    table[0x0D] = {"ORA", &CPU::ORA, AddrMode::Absolute, OpType::Read, 3, 4};
-    table[0x1D] = {"ORA", &CPU::ORA, AddrMode::AbsoluteX, OpType::Read, 3, 4};
-    table[0x19] = {"ORA", &CPU::ORA, AddrMode::AbsoluteY, OpType::Read, 3, 4};
-    table[0x01] = {"ORA", &CPU::ORA, AddrMode::IndirectX, OpType::Read, 2, 6};
-    table[0x11] = {"ORA", &CPU::ORA, AddrMode::IndirectY, OpType::Read, 2, 5};
-
-    table[0x29] = {"AND", &CPU::AND, AddrMode::Immediate, OpType::Read, 2, 2};
-    table[0x25] = {"AND", &CPU::AND, AddrMode::ZeroPage, OpType::Read, 2, 3};
-    table[0x35] = {"AND", &CPU::AND, AddrMode::ZeroPageX, OpType::Read, 2, 4};
-    table[0x2D] = {"AND", &CPU::AND, AddrMode::Absolute, OpType::Read, 3, 4};
-    table[0x3D] = {"AND", &CPU::AND, AddrMode::AbsoluteX, OpType::Read, 3, 4};
-    table[0x39] = {"AND", &CPU::AND, AddrMode::AbsoluteY, OpType::Read, 3, 4};
-    table[0x21] = {"AND", &CPU::AND, AddrMode::IndirectX, OpType::Read, 2, 6};
-    table[0x31] = {"AND", &CPU::AND, AddrMode::IndirectY, OpType::Read, 2, 5};
-
-    table[0x85] = {"STA", &CPU::STA, AddrMode::ZeroPage, OpType::Write, 2, 3};
-    table[0x95] = {"STA", &CPU::STA, AddrMode::ZeroPageX, OpType::Write, 2, 4};
-    table[0x8D] = {"STA", &CPU::STA, AddrMode::Absolute, OpType::Write, 3, 4};
-    table[0x9D] = {"STA", &CPU::STA, AddrMode::AbsoluteX, OpType::Write, 3, 5};
-    table[0x99] = {"STA", &CPU::STA, AddrMode::AbsoluteY, OpType::Write, 3, 5};
-    table[0x81] = {"STA", &CPU::STA, AddrMode::IndirectX, OpType::Write, 2, 6};
-    table[0x91] = {"STA", &CPU::STA, AddrMode::IndirectY, OpType::Write, 2, 6};
-
-    table[0xA9] = {"LDA", &CPU::LDA, AddrMode::Immediate, OpType::Read, 2, 2};
-    table[0xA5] = {"LDA", &CPU::LDA, AddrMode::ZeroPage, OpType::Read, 2, 3};
-    table[0xB5] = {"LDA", &CPU::LDA, AddrMode::ZeroPageX, OpType::Read, 2, 4};
-    table[0xAD] = {"LDA", &CPU::LDA, AddrMode::Absolute, OpType::Read, 3, 4};
-    table[0xBD] = {"LDA", &CPU::LDA, AddrMode::AbsoluteX, OpType::Read, 3, 4};
-    table[0xB9] = {"LDA", &CPU::LDA, AddrMode::AbsoluteY, OpType::Read, 3, 4};
-    table[0xA1] = {"LDA", &CPU::LDA, AddrMode::IndirectX, OpType::Read, 2, 6};
-    table[0xB1] = {"LDA", &CPU::LDA, AddrMode::IndirectY, OpType::Read, 2, 5};
-
-    table[0xA2] = {"LDX", &CPU::LDX, AddrMode::Immediate, OpType::Read, 2, 2};
-    table[0xA6] = {"LDX", &CPU::LDX, AddrMode::ZeroPage, OpType::Read, 2, 3};
-    table[0xB6] = {"LDX", &CPU::LDX, AddrMode::ZeroPageY, OpType::Read, 2, 4};
-    table[0xAE] = {"LDX", &CPU::LDX, AddrMode::Absolute, OpType::Read, 3, 4};
-    table[0xBE] = {"LDX", &CPU::LDX, AddrMode::AbsoluteY, OpType::Read, 3, 4};
-
-    table[0xA0] = {"LDY", &CPU::LDY, AddrMode::Immediate, OpType::Read, 2, 2};
-    table[0xA4] = {"LDY", &CPU::LDY, AddrMode::ZeroPage, OpType::Read, 2, 3};
-    table[0xB4] = {"LDY", &CPU::LDY, AddrMode::ZeroPageX, OpType::Read, 2, 4};
-    table[0xAC] = {"LDY", &CPU::LDY, AddrMode::Absolute, OpType::Read, 3, 4};
-    table[0xBC] = {"LDY", &CPU::LDY, AddrMode::AbsoluteX, OpType::Read, 3, 4};
-
-    table[0xE8] = {"INX", &CPU::INX, AddrMode::Implied, OpType::Implied, 1, 2};
-    table[0xC8] = {"INY", &CPU::INY, AddrMode::Implied, OpType::Implied, 1, 2};
-
-    table[0xAA] = {"TAX", &CPU::TAX, AddrMode::Implied, OpType::Implied, 1, 2};
-    table[0xA8] = {"TAY", &CPU::TAY, AddrMode::Implied, OpType::Implied, 1, 2};
-    table[0xBA] = {"TSX", &CPU::TSX, AddrMode::Implied, OpType::Implied, 1, 2};
-    table[0x8A] = {"TXA", &CPU::TXA, AddrMode::Implied, OpType::Implied, 1, 2};
-    table[0x9A] = {"TXS", &CPU::TXS, AddrMode::Implied, OpType::Implied, 1, 2};
-    table[0x98] = {"TYA", &CPU::TYA, AddrMode::Implied, OpType::Implied, 1, 2};
-}
+const std::array<CPU::Instruction, 256> CPU::table = makeTable();
 
 void CPU::step() {
     const uint8_t opcode = memory.read(PC++);
@@ -106,14 +41,63 @@ void CPU::BRK(uint16_t, uint8_t) noexcept {
     memory.write(0x0100 + SP--, PC >> 8 & 0xFF);
     memory.write(0x0100 + SP--, PC & 0xFF);
 
-    const uint8_t flags = P | 0x10;
-    memory.write(0x0100 + SP--, flags);
+    setFlag(Flag::Break);
+    memory.write(0x0100 + SP--, P);
 
-    P |= 0x04;
+    setFlag(Flag::InterruptDisable);
 
     const uint8_t low = memory.read(0xFFFE);
     const uint8_t high = memory.read(0xFFFF);
     PC = high << 8 | low;
+}
+
+void CPU::CLC(uint16_t, uint8_t) noexcept {
+    clearFlag(Flag::Carry);
+}
+
+void CPU::CLD(uint16_t, uint8_t) noexcept {
+    clearFlag(Flag::Decimal);
+}
+
+void CPU::CLI(uint16_t, uint8_t) noexcept {
+    clearFlag(Flag::InterruptDisable);
+}
+
+void CPU::CLV(uint16_t, uint8_t) noexcept {
+    clearFlag(Flag::Overflow);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void CPU::DEC(const uint16_t addr, uint8_t value) noexcept {
+    value--;
+    memory.write(addr, value);
+    setZN(value);
+}
+
+void CPU::DEX(uint16_t, uint8_t) noexcept {
+    X--;
+    setZN(X);
+}
+
+void CPU::DEY(uint16_t, uint8_t) noexcept {
+    Y--;
+    setZN(Y);
+}
+
+void CPU::INC(const uint16_t addr, uint8_t value) noexcept {
+    value++;
+    memory.write(addr, value);
+    setZN(value);
+}
+
+void CPU::INX(uint16_t, uint8_t) noexcept {
+    X++;
+    setZN(X);
+}
+
+void CPU::INY(uint16_t, uint8_t) noexcept {
+    Y++;
+    setZN(Y);
 }
 
 void CPU::ORA(uint16_t, const uint8_t value) noexcept {
@@ -153,16 +137,6 @@ void CPU::LDX(uint16_t, const uint8_t value) noexcept {
 
 void CPU::LDY(uint16_t, const uint8_t value) noexcept {
     Y = value;
-    setZN(Y);
-}
-
-void CPU::INX(uint16_t, uint8_t) noexcept {
-    X++;
-    setZN(X);
-}
-
-void CPU::INY(uint16_t, uint8_t) noexcept {
-    Y++;
     setZN(Y);
 }
 
@@ -285,8 +259,19 @@ CPU::FetchResult CPU::fetch(const AddrMode mode) {
 
 // ReSharper disable once CppDFAUnreachableFunctionCall
 void CPU::setZN(const uint8_t value) noexcept {
-    if (value == 0) P |= 0x02;
-    else P &= ~0x02; // Z flag
-    if (value & 0x80) P |= 0x80;
-    else P &= ~0x80; // N flag
+    if (value == 0) setFlag(Flag::Zero);
+    else clearFlag(Flag::Zero);
+
+    if (value & 0x80) setFlag(Flag::Negative);
+    else clearFlag(Flag::Negative);
+}
+
+// ReSharper disable once CppDFAUnreachableFunctionCall
+void CPU::setFlag(Flag flag) noexcept {
+    P |= static_cast<uint8_t>(flag);
+}
+
+// ReSharper disable once CppDFAUnreachableFunctionCall
+void CPU::clearFlag(const Flag flag) noexcept {
+    P &= ~static_cast<uint8_t>(flag);
 }
