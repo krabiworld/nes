@@ -1,4 +1,5 @@
 #pragma once
+#include <string_view>
 #include "memory.hpp"
 
 class CPU {
@@ -40,7 +41,7 @@ public:
     };
 
     struct Instruction {
-        const char *name;
+        std::string_view name;
 
         void (CPU::*operate)(uint16_t addr, uint8_t value);
 
@@ -69,10 +70,12 @@ private:
     static std::array<Instruction, 256> makeTable() {
         std::array<Instruction, 256> t{};
         for (auto &i: t) {
-            i = {"???", nullptr, AddrMode::Implied, OpType::Implied, 1, 2};
+            i = {"Unimplemented", nullptr, AddrMode::Implied, OpType::Implied, 1, 2};
         }
 
-        auto set = [&](const uint8_t opcode, const char* name, auto fn, AddrMode mode, OpType type, int bytes, int cycles) {
+        auto set = [&](const uint8_t opcode, const std::string_view name, auto fn, AddrMode mode, OpType type,
+                       int bytes,
+                       int cycles) {
             t[opcode] = {name, fn, mode, type, bytes, cycles};
         };
 

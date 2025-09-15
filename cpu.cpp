@@ -9,6 +9,10 @@ void CPU::step() {
 
     std::println("Opcode: {}", instr.name);
 
+    if (instr.name == "Unimplemented") {
+        return;
+    }
+
     FetchResult fr{0, 0};
     if (instr.mode != AddrMode::Implied) {
         fr = fetch(instr.mode);
